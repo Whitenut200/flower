@@ -20,18 +20,18 @@ export default function BirthPage() {
   }, [selectedMonth, selectedDay]);
 
   return (
-    <div className="px-5 pt-4 pb-8">
+    <div className="px-2 pt-4 pb-8">
       <h1 className="text-2xl font-bold text-gray-800">나의 탄생화는?</h1>
       <p className="text-sm text-gray-400 mt-1">생일을 선택하면 탄생화를 알려드려요</p>
 
       {/* 월 선택 */}
       <p className="text-sm font-semibold text-gray-500 mt-5 mb-2">월</p>
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="grid grid-cols-6 gap-2">
         {months.map((m) => (
           <button
             key={m}
             onClick={() => setSelectedMonth(m)}
-            className={`shrink-0 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+            className={`py-2.5 rounded-full text-sm font-medium transition-all ${
               selectedMonth === m
                 ? 'bg-[var(--pink)] text-white font-bold'
                 : 'bg-white text-gray-700 shadow-sm'
@@ -44,12 +44,12 @@ export default function BirthPage() {
 
       {/* 일 선택 */}
       <p className="text-sm font-semibold text-gray-500 mt-4 mb-2">일</p>
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="grid grid-cols-10 gap-1.5">
         {days.map((d) => (
           <button
             key={d}
             onClick={() => setSelectedDay(d)}
-            className={`shrink-0 w-10 h-10 rounded-full text-sm font-medium transition-all ${
+            className={`py-1.5 rounded-full text-xs font-medium transition-all ${
               selectedDay === d
                 ? 'bg-[var(--pink)] text-white font-bold'
                 : 'bg-white text-gray-700 shadow-sm'
@@ -75,7 +75,10 @@ export default function BirthPage() {
       )}
 
       {/* 월별 대표 탄생화 */}
-      <h2 className="text-lg font-bold text-gray-800 mt-8 mb-4">월별 대표 탄생화</h2>
+      <h2 className="text-lg font-bold text-gray-800 mt-8 mb-2">월별 대표 탄생화</h2>
+      <p className="text-xs text-gray-400 mb-4">
+        출처: 영국왕립원예학회(RHS) · 서양 기준이므로 한국에서 통용되는 탄생화와 다를 수 있습니다
+      </p>
       {monthlyBirthFlowers.map((bf) => (
         <div
           key={bf.month}

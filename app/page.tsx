@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { flowers, occasions } from '@/data/flowers';
+import { flowers, plants, occasions } from '@/data/flowers';
 
 export default function Home() {
   const [selected, setSelected] = useState<string | null>(null);
   const filtered = selected
     ? flowers.filter((f) => f.occasions.includes(selected))
+    : [];
+  const filteredPlants = selected
+    ? plants.filter((p) => p.occasions.includes(selected))
     : [];
 
   const selectedOccasion = occasions.find((o) => o.label === selected);
@@ -19,12 +22,12 @@ export default function Home() {
       <p className="text-sm text-gray-400 mt-1">상황에 맞는 꽃을 추천해드릴게요</p>
 
       {/* 목적 선택 칩 */}
-      <div className="flex gap-2 overflow-x-auto mt-5 pb-2 scrollbar-hide">
+      <div className="grid grid-cols-4 gap-2 mt-5">
         {occasions.map((occ) => (
           <button
             key={occ.id}
             onClick={() => setSelected(selected === occ.label ? null : occ.label)}
-            className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
+            className={`px-3 py-2.5 rounded-full text-sm font-semibold transition-all ${
               selected === occ.label
                 ? 'bg-[var(--pink)] text-white shadow-md'
                 : 'bg-white text-gray-700 shadow-sm hover:shadow-md'
@@ -75,6 +78,34 @@ export default function Home() {
               </div>
             </div>
           ))}
+
+          {/* 화초 섹션 */}
+          {filteredPlants.length > 0 && (
+            <>
+              <div className="flex items-center gap-3 mt-8 mb-4">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-sm font-semibold text-gray-400">선물용 화초</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+              {filteredPlants.map((plant) => (
+                <div
+                  key={plant.id}
+                  className="flex bg-white rounded-2xl p-4 mb-3 shadow-sm"
+                >
+                  <span className="text-4xl mr-4 mt-1">{plant.image}</span>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-800">{plant.name}</h3>
+                    <p className="text-sm text-green-600 font-semibold mt-0.5">
+                      의미: {plant.meaning}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1.5 leading-5">
+                      {plant.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       ) : (
         <div className="mt-20 text-center text-gray-300">

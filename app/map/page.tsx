@@ -10,10 +10,10 @@ interface FlowerShop {
   lat: number;
   lng: number;
   url: string;
+  distance: string;
 }
 
-const KAKAO_REST_KEY = 'bffb96920e389d2640a20bb8e5ed8981';
-const KAKAO_JS_KEY = 'bffb96920e389d2640a20bb8e5ed8981';
+const KAKAO_JS_KEY = process.env.NEXT_PUBLIC_KAKAO_JS_KEY || '';
 
 export default function MapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -21,31 +21,55 @@ export default function MapPage() {
   const [selectedShop, setSelectedShop] = useState<FlowerShop | null>(null);
   const [loading, setLoading] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const kakaoMapRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
 
   // 카카오맵 SDK 로드
   useEffect(() => {
-    if (window.kakao?.maps) {
+    if (!KAKAO_JS_KEY) {
+      setMapError('카카오 JavaScript 키가 설정되지 않았습니다');
+      setLoading(false);
+      return;
+    }
+
+    if (window.kakao?.maps?.services) {
       setMapLoaded(true);
       return;
     }
 
+    // 이전에 services 없이 로드된 경우 기존 스크립트 제거
+    const oldScript = document.querySelector('script[src*="dapi.kakao.com"]');
+    if (oldScript) oldScript.remove();
+
     const script = document.createElement('script');
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&libraries=services&autoload=false`;
     script.onload = () => {
       window.kakao.maps.load(() => {
+        console.log('카카오맵 로드 완료, services:', !!window.kakao.maps.services);
         setMapLoaded(true);
       });
+    };
+    script.onerror = () => {
+      setMapError('카카오맵 로드 실패 — 개발자 콘솔에서 사이트 도메인을 확인해주세요');
+      setLoading(false);
     };
     document.head.appendChild(script);
   }, []);
 
+  // 기존 마커 제거
+  const clearMarkers = useCallback(() => {
+    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current = [];
+  }, []);
+
   const searchFlowerShops = useCallback(async (lat: number, lng: number) => {
     setLoading(true);
+    clearMarkers();
     try {
       const res = await fetch(
-        `https://dapi.kakao.com/v2/local/search/keyword.json?query=꽃집&y=${lat}&x=${lng}&radius=3000&size=15&sort=distance`,
-        { headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` } }
+        `/api/flower-shops?lat=${lat}&lng=${lng}`
       );
       const data = await res.json();
       if (data.documents) {
@@ -57,6 +81,7 @@ export default function MapPage() {
           lat: parseFloat(doc.y),
           lng: parseFloat(doc.x),
           url: doc.place_url,
+          distance: doc.distance,
         }));
         setShops(parsed);
 
@@ -72,6 +97,7 @@ export default function MapPage() {
             window.kakao.maps.event.addListener(marker, 'click', () => {
               setSelectedShop(shop);
             });
+            markersRef.current.push(marker);
           });
         }
       }
@@ -80,7 +106,7 @@ export default function MapPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clearMarkers]);
 
   // 지도 초기화
   useEffect(() => {
@@ -112,21 +138,87 @@ export default function MapPage() {
     searchFlowerShops(center.getLat(), center.getLng());
   };
 
+  // 장소 검색 → 해당 위치로 이동 후 꽃집 검색
+  const handlePlaceSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim() || !mapLoaded) return;
+
+    const geocoder = new window.kakao.maps.services.Geocoder();
+    const places = new window.kakao.maps.services.Places();
+
+    // 먼저 키워드로 장소 검색
+    places.keywordSearch(searchQuery, (result: any, status: any) => {
+      if (status === window.kakao.maps.services.Status.OK && result.length > 0) {
+        const lat = parseFloat(result[0].y);
+        const lng = parseFloat(result[0].x);
+        const moveLatLng = new window.kakao.maps.LatLng(lat, lng);
+        kakaoMapRef.current.setCenter(moveLatLng);
+        searchFlowerShops(lat, lng);
+        setSearchQuery('');
+      } else {
+        // 키워드 실패 시 주소로 검색
+        geocoder.addressSearch(searchQuery, (result: any, status: any) => {
+          if (status === window.kakao.maps.services.Status.OK && result.length > 0) {
+            const lat = parseFloat(result[0].y);
+            const lng = parseFloat(result[0].x);
+            const moveLatLng = new window.kakao.maps.LatLng(lat, lng);
+            kakaoMapRef.current.setCenter(moveLatLng);
+            searchFlowerShops(lat, lng);
+            setSearchQuery('');
+          }
+        });
+      }
+    });
+  };
+
+  // 거리 포맷
+  const formatDistance = (m: string) => {
+    const meters = parseInt(m);
+    if (meters >= 1000) return `${(meters / 1000).toFixed(1)}km`;
+    return `${meters}m`;
+  };
+
   return (
     <div className="relative" style={{ height: 'calc(100vh - 80px)' }}>
       <div ref={mapRef} className="w-full h-full" />
 
+      {/* 장소 검색 */}
+      <form
+        onSubmit={handlePlaceSearch}
+        className="absolute top-4 left-4 right-4 z-10 flex gap-2"
+      >
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="지역, 주소 검색 (예: 강남역, 홍대)"
+          className="flex-1 px-4 py-2.5 rounded-full shadow-lg text-sm bg-white outline-none focus:ring-2 focus:ring-[var(--pink)]"
+        />
+        <button
+          type="submit"
+          className="px-5 py-2.5 rounded-full shadow-lg text-sm font-semibold bg-[var(--pink)] text-white hover:shadow-xl transition-shadow"
+        >
+          검색
+        </button>
+      </form>
+
       {/* 이 지역에서 검색 */}
       <button
         onClick={handleSearchHere}
-        className="absolute top-4 left-1/2 -translate-x-1/2 bg-white px-5 py-2.5 rounded-full shadow-lg text-sm font-semibold text-[var(--pink)] z-10 hover:shadow-xl transition-shadow"
+        className="absolute top-16 left-1/2 -translate-x-1/2 bg-white px-5 py-2.5 rounded-full shadow-lg text-sm font-semibold text-[var(--pink)] z-10 hover:shadow-xl transition-shadow"
       >
-        이 지역에서 검색
+        이 지역에서 꽃집 검색
       </button>
 
       {loading && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 text-sm text-[var(--pink)] z-10">
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 text-sm text-[var(--pink)] z-10">
           검색 중...
+        </div>
+      )}
+
+      {mapError && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-sm text-red-500 z-10 bg-white p-4 rounded-xl shadow">
+          {mapError}
         </div>
       )}
 
@@ -139,7 +231,10 @@ export default function MapPage() {
           >
             ✕
           </button>
-          <h3 className="font-bold text-lg text-gray-800">{selectedShop.name}</h3>
+          <div className="flex items-baseline gap-2">
+            <h3 className="font-bold text-lg text-gray-800">{selectedShop.name}</h3>
+            <span className="text-xs text-[var(--pink)] font-semibold">{formatDistance(selectedShop.distance)}</span>
+          </div>
           <p className="text-sm text-gray-500 mt-1">{selectedShop.address}</p>
           <p className="text-sm text-gray-400 mt-0.5">{selectedShop.phone}</p>
           <div className="flex gap-2.5 mt-4">

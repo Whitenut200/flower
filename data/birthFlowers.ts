@@ -1,19 +1,21 @@
 import { BirthFlower } from './types';
 
 // 월별 대표 탄생화
+// 출처: 영국왕립원예학회(RHS) 기준 월별 탄생화
+// ※ 서양 기준이므로 한국에서 통용되는 탄생화와 다를 수 있습니다. 참고용으로 확인해주세요.
 export const monthlyBirthFlowers: BirthFlower[] = [
-  { month: 1, day: 0, flower: '스노드롭', meaning: '희망', image: '🤍' },
-  { month: 2, day: 0, flower: '앵초', meaning: '젊은 시절과 고뇌', image: '💜' },
-  { month: 3, day: 0, flower: '수선화', meaning: '자존', image: '💛' },
-  { month: 4, day: 0, flower: '아몬드', meaning: '진실한 사랑', image: '💗' },
-  { month: 5, day: 0, flower: '앵초', meaning: '젊은 날의 슬픔', image: '🌸' },
-  { month: 6, day: 0, flower: '장미', meaning: '사랑', image: '🌹' },
-  { month: 7, day: 0, flower: '쑥부쟁이', meaning: '태만', image: '💜' },
-  { month: 8, day: 0, flower: '해바라기', meaning: '아름다운 빛', image: '🌻' },
-  { month: 9, day: 0, flower: '호랑이꽃', meaning: '나를 사랑해주세요', image: '🧡' },
-  { month: 10, day: 0, flower: '빨간국화', meaning: '사랑', image: '❤️' },
-  { month: 11, day: 0, flower: '서양모과', meaning: '유일한 사랑', image: '💛' },
-  { month: 12, day: 0, flower: '쑥국화', meaning: '평화', image: '🌿' },
+  { month: 1, day: 0, flower: '카네이션', meaning: '사랑, 매력', image: '🌸' },
+  { month: 2, day: 0, flower: '제비꽃', meaning: '성실, 겸손', image: '💜' },
+  { month: 3, day: 0, flower: '수선화', meaning: '자기애, 존경', image: '💛' },
+  { month: 4, day: 0, flower: '데이지', meaning: '순수, 희망', image: '🌼' },
+  { month: 5, day: 0, flower: '은방울꽃', meaning: '겸손, 행복의 귀환', image: '🤍' },
+  { month: 6, day: 0, flower: '장미', meaning: '사랑, 감사', image: '🌹' },
+  { month: 7, day: 0, flower: '수련', meaning: '청순한 마음', image: '🪷' },
+  { month: 8, day: 0, flower: '글라디올러스', meaning: '성실, 기억', image: '❤️' },
+  { month: 9, day: 0, flower: '과꽃', meaning: '추억, 신뢰', image: '💜' },
+  { month: 10, day: 0, flower: '금잔화', meaning: '이별의 슬픔', image: '🧡' },
+  { month: 11, day: 0, flower: '국화', meaning: '고귀, 진실', image: '🌼' },
+  { month: 12, day: 0, flower: '포인세티아', meaning: '축복, 기쁜 소식', image: '❤️' },
 ];
 
 // 365일 탄생화
