@@ -3,8 +3,8 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 
 export const metadata: Metadata = {
-  title: "Flower Pick - 꽃 추천 & 꽃말 도감",
-  description: "목적별 꽃 추천, 365일 탄생화, 꽃말 도감, 주변 꽃집 찾기",
+  title: "꽃 선물 고민? 꽃픽에서 추천받자",
+  description: "상황별 꽃/화초 추천부터 365일 탄생화, 주변 꽃집 찾기까지",
 };
 
 export default function RootLayout({
